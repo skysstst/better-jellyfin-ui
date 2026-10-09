@@ -4,9 +4,14 @@
 
 A modern UI enhancement theme for Jellyfin focused on cleaner layout, smoother animations, and ios like design.
 
+> [!IMPORTANT]
+> **This is a fork of [`tromoSM/better-jellyfin-ui`](https://github.com/tromoSM/better-jellyfin-ui).**
+> All design credit belongs to tromoSM (Apache 2.0). This fork patches one thing —
+> the play button on media cards — see [What this fork changes](#what-this-fork-changes).
+
 ---
-[![](https://data.jsdelivr.com/v1/package/gh/tromoSM/better-jellyfin-ui/badge?style=rounded)](https://www.jsdelivr.com/package/gh/tromoSM/better-jellyfin-ui)
-[![](https://img.shields.io/jsdelivr/gh/hy/tromosm/better-jellyfin-ui?style=flat&label=jsDelivr&color=f25a30)](https://www.jsdelivr.com/package/gh/tromoSM/better-jellyfin-ui)
+[![](https://data.jsdelivr.com/v1/package/gh/skysstst/better-jellyfin-ui/badge?style=rounded)](https://www.jsdelivr.com/package/gh/skysstst/better-jellyfin-ui)
+[![](https://img.shields.io/jsdelivr/gh/hy/skysstst/better-jellyfin-ui?style=flat&label=jsDelivr&color=f25a30)](https://www.jsdelivr.com/package/gh/skysstst/better-jellyfin-ui)
 
 ## Installation
 
@@ -17,13 +22,63 @@ Dashboard → General → Branding → Custom CSS
 Paste:
 
 ```css
-@import url("https://cdn.jsdelivr.net/gh/tromoSM/better-jellyfin-ui@main/theme.css");
+@import url("https://cdn.jsdelivr.net/gh/skysstst/better-jellyfin-ui@main/theme.css");
 ```
 Click **Save** and refresh the page.
+
+> [!NOTE]
+> Use the `skysstst` URL above, not the upstream one. The fix lives in `theme.css`,
+> so importing `tromoSM/...` gives you the unpatched original. The optional add-ons
+> below are unchanged and still load from upstream.
 
 > [!TIP]
 > ### For firefox users
 > make sure to enable `layout.css.backdrop-filter.enabled` and `gfx.webrender.all` to true in `about:config` to be able to see the blur effect. [detailed tutorial on how to enable backdrop blur](https://shounak.hashnode.dev/how-to-enable-backdrop-filter-in-firefox)
+
+## What this fork changes
+
+**One thing only: the play button on media cards.** Everything else is upstream, unmodified.
+
+### The problem
+
+On Jellyfin 12 library views the covers had no play button at all. Two independent
+bugs, both in `theme.css`:
+
+1. **`scale: 0`** — upstream hides the centred FAB until the card is hovered, and it
+   pops in with no transition.
+2. **`position: relative`** — upstream flips `.cardOverlayContainer` to
+   `position: relative`, which drops the natively `position: absolute` FAB back into
+   normal flow. The button then renders *below* the cover instead of on it.
+
+Bug 2 is the one that makes the button unfindable: fixing bug 1 alone leaves the
+control outside the card artwork, still invisible.
+
+### The fix
+
+All of it sits in a single commented block at the end of `theme.css`
+(`LIQUID GLASS PLAY BUTTON - fork patch`), so it can be rebased or dropped cleanly:
+
+- **Re-centred** — pinned back to the middle of the card with `position: absolute`
+  plus `translate(-50%, -50%)`, sized at `2.9em`.
+- **Fades in on hover** — sits at `opacity: 0` / `scale: 0.88` and reveals on
+  `:hover` over 0.22 s. `pointer-events` are disabled while hidden, so it cannot be
+  clicked blind.
+- **Liquid-glass styling** — frosted blur, translucent tint, white inset rim light and
+  a soft drop shadow, reusing the recipe upstream already applies to `.countIndicator`
+  and `.paper-icon-button-light`. No solid fill, no accent colour.
+- **Fallbacks** — `@media (hover: none)` keeps it visible on touch devices, which have
+  no hover state at all; `:focus-within` reveals it for keyboard navigation.
+
+### For JellyFrame users
+
+This fork is also registered as a standalone theme (`better-jellyfin-ui-glass`), so it
+can be picked in JellyFrame instead of being injected as custom CSS. JellyFrame caches
+both the theme manifest and the compiled CSS, so after any change to `theme.css` you
+must bump the theme version **and** purge the jsDelivr cache:
+
+```bash
+curl https://purge.jsdelivr.net/gh/skysstst/better-jellyfin-ui@main/theme.css
+```
  
 ---
 
@@ -257,4 +312,5 @@ https://github.com/user-attachments/assets/56181924-8a25-4a21-b272-642b82cead16
 
 
 ###### [send feedback or request features](https://tromosm.gt.tc/?feedback=true&utm_source=jellyreadmenew)
+###### Fork maintained by [skysstst](https://github.com/skysstst) — see [What this fork changes](#what-this-fork-changes).
 ###### © 2026 - tromoSM. Licensed under Apache 2.0.
