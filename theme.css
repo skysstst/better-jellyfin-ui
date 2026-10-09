@@ -2627,7 +2627,27 @@ mix-blend-mode: soft-light;}
   visibility: visible !important;
 }
 
-/* 2. liquid-glass surface */
+/* 2. re-centre the control.
+      Upstream turns the card overlay into `position: relative`, which throws
+      the natively absolute-positioned FAB back into normal flow - the button
+      ends up sitting *below* the cover. Pin it to the middle of the card
+      again (2.6em controls need a 1.3em offset, 3em controls need 1.5em). */
+.cardOverlayContainer > .cardOverlayFab-primary,
+.cardOverlayContainer > .cardOverlayButton-centered {
+  position: absolute !important;
+  top: 50% !important;
+  left: 50% !important;
+  right: auto !important;
+  bottom: auto !important;
+  margin: 0 !important;
+  width: 2.9em !important;
+  height: 2.9em !important;
+  transform: translate(-50%, -50%) !important;
+  transform-origin: center center !important;
+  z-index: 3;
+}
+
+/* 3. liquid-glass surface */
 .cardOverlayContainer > .cardOverlayFab-primary,
 .cardOverlayContainer > .cardOverlayButton-centered {
   background-color: rgba(0, 0, 0, 0.24) !important;
@@ -2646,14 +2666,14 @@ mix-blend-mode: soft-light;}
     box-shadow 0.2s cubic-bezier(0.075, 0.82, 0.165, 1);
 }
 
-/* 3. icon legibility over bright artwork */
+/* 4. icon legibility over bright artwork */
 .cardOverlayContainer > .cardOverlayFab-primary .MuiSvgIcon-root,
 .cardOverlayContainer > .cardOverlayButton-centered .MuiSvgIcon-root {
   color: #fff !important;
   filter: drop-shadow(0px 0px 6px rgba(0, 0, 0, 0.6));
 }
 
-/* 4. hover / press feedback.
+/* 5. hover / press feedback.
       Upstream neutralises the native 1.4 grow with `transform: scale(1)`,
       so the independent `scale` property is used here instead. */
 .cardOverlayContainer:hover > .cardOverlayFab-primary,
