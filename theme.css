@@ -2607,24 +2607,31 @@ mix-blend-mode: soft-light;}
 /* ==========================================================================
    LIQUID GLASS PLAY BUTTON - fork patch (skysstst/better-jellyfin-ui)
    --------------------------------------------------------------------------
-   Upstream hides the centred play button until the card is hovered
-   (`.cardOverlayContainer > .cardOverlayFab-primary { scale: 0 }`).
-   On Jellyfin 12 library views that left the covers with no play
-   affordance at all, so this patch:
-     1. restores the button permanently (scale / opacity 1);
-     2. restyles it with the theme's own liquid-glass recipe - frosted
+   Two separate bugs left Jellyfin 12 library covers with no play button:
+     1. upstream hides the FAB until hover (`scale: 0`) - and it pops in
+        with no transition;
+     2. upstream flips `.cardOverlayContainer` to `position: relative`,
+        which drops the natively absolute FAB back into normal flow, so it
+        renders *below* the cover even when visible.
+   This patch:
+     1. re-centres the control on the cover;
+     2. keeps the hover-reveal behaviour, but drives it through opacity +
+        a slight scale so it fades in smoothly;
+     3. restyles it with the theme's own liquid-glass recipe - frosted
         blur, translucent tint, white inset rim light, soft drop shadow -
         the same treatment already used by .countIndicator and
         .paper-icon-button-light, so it matches the rest of the UI.
    No green, no solid fill.
    ========================================================================== */
 
-/* 1. visible at all times (upstream ships scale: 0) */
+/* 1. hidden until the card is hovered (upstream ships scale: 0).
+      pointer-events are off while hidden so it cannot be clicked blind. */
 .cardOverlayContainer > .cardOverlayFab-primary,
 .cardOverlayContainer > .cardOverlayButton-centered {
-  scale: 1 !important;
-  opacity: 1 !important;
+  scale: 0.88 !important;
+  opacity: 0 !important;
   visibility: visible !important;
+  pointer-events: none;
 }
 
 /* 2. re-centre the control.
@@ -2661,7 +2668,8 @@ mix-blend-mode: soft-light;}
     -2px -2px 2px -2px rgba(255, 255, 255, 0.39) inset,
     0px 0px 15px rgba(0, 0, 0, 0.329);
   transition:
-    scale 0.2s cubic-bezier(0.075, 0.82, 0.165, 1),
+    opacity 0.22s cubic-bezier(0.075, 0.82, 0.165, 1),
+    scale 0.22s cubic-bezier(0.075, 0.82, 0.165, 1),
     background-color 0.2s cubic-bezier(0.075, 0.82, 0.165, 1),
     box-shadow 0.2s cubic-bezier(0.075, 0.82, 0.165, 1);
 }
@@ -2673,12 +2681,20 @@ mix-blend-mode: soft-light;}
   filter: drop-shadow(0px 0px 6px rgba(0, 0, 0, 0.6));
 }
 
-/* 5. hover / press feedback.
+/* 5. fade in on hover / keyboard focus.
       Upstream neutralises the native 1.4 grow with `transform: scale(1)`,
-      so the independent `scale` property is used here instead. */
+      so the independent `scale` property is used here instead.
+      Scale lands on exactly 1 when visible, which keeps the centring
+      pixel-accurate (any other value shifts it slightly). */
 .cardOverlayContainer:hover > .cardOverlayFab-primary,
-.cardOverlayContainer:hover > .cardOverlayButton-centered {
-  scale: 1.12 !important;
+.cardOverlayContainer:hover > .cardOverlayButton-centered,
+.cardScalable:hover > .cardOverlayFab-primary,
+.cardScalable:hover > .cardOverlayButton-centered,
+.card-hoverable:focus-within > .cardOverlayFab-primary,
+.card-hoverable:focus-within > .cardOverlayButton-centered {
+  opacity: 1 !important;
+  scale: 1 !important;
+  pointer-events: auto;
   background-color: rgba(0, 0, 0, 0.38) !important;
   box-shadow:
     3px 2px 2px -3px rgba(255, 255, 255, 0.55) inset,
@@ -2686,8 +2702,20 @@ mix-blend-mode: soft-light;}
     0px 0px 22px rgba(0, 0, 0, 0.45);
 }
 
+/* 6. press feedback */
 .cardOverlayContainer > .cardOverlayFab-primary:active,
 .cardOverlayContainer > .cardOverlayButton-centered:active {
-  scale: 0.94 !important;
+  scale: 0.96 !important;
   background-color: rgba(0, 0, 0, 0.46) !important;
+}
+
+/* 7. touch devices have no hover state - keep the button visible there,
+      otherwise it would be unreachable. */
+@media (hover: none) {
+  .cardOverlayContainer > .cardOverlayFab-primary,
+  .cardOverlayContainer > .cardOverlayButton-centered {
+    opacity: 1 !important;
+    scale: 1 !important;
+    pointer-events: auto;
+  }
 }
